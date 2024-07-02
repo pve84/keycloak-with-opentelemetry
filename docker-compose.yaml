@@ -33,9 +33,9 @@ services:
       - otel
     command:
       - start-dev
-      - '--log-console-output=json'
+      # - '--log-console-output=json'
       - '--log=console'
-      - '--log-level=DEBUG'
+      - '--log-level=INFO'
 
   jaeger:
     container_name: jaeger
@@ -54,7 +54,7 @@ services:
       - ./grafana/dashboards:/provisioning/dashboards
       - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - 3000:3000
+      - 3001:3000
     environment:
       LOGSPOUT: ignore
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -64,19 +64,19 @@ services:
       - jaeger
       # - prometheus
 
-  # prometheus:
-  #   container_name: prometheus
-  #   image: prom/prometheus:latest
-  #   ports:
-  #     - 9090:9090
-  #   environment:
-  #     LOGSPOUT: ignore
-  #   command: 
-  #     - "--web.enable-remote-write-receiver"
-  #     - "--config.file=/etc/prometheus/prometheus.yml"
-  #     - "--storage.tsdb.path=/prometheus"
-  #     - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-  #     - "--web.console.templates=/usr/share/prometheus/consoles"
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    environment:
+      LOGSPOUT: ignore
+    command: 
+      - "--web.enable-remote-write-receiver"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
 
   otel:
     container_name: otel
@@ -117,56 +117,56 @@ services:
     depends_on:
       - elasticsearch
       
-  # logstash:
-  #   image: docker.elastic.co/logstash/logstash:8.3.3
-  #   container_name: logstash
-  #   volumes:
-  #     - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-  #     - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-  #   environment:
-  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-  #     LOGSPOUT: ignore
-  #   depends_on:
-  #     - elasticsearch
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.3.3
+    container_name: logstash
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      LOGSPOUT: ignore
+    depends_on:
+      - elasticsearch
       
-  # logspout:
-  #   image: gliderlabs/logspout:v3
-  #   container_name: logspout
-  #   command: 'udp://logstash:5044,syslog+udp://criblworker:9514?filter.name=nginx'
-  #   environment:
-  #     LOGSPOUT: ignore
-  #   volumes:
-  #     - '/var/run/docker.sock:/tmp/docker.sock'
-  #   depends_on:
-  #     - logstash
+  # # logspout:
+  # #   image: gliderlabs/logspout:v3
+  # #   container_name: logspout
+  # #   command: 'udp://logstash:5044,syslog+udp://criblworker:9514?filter.name=nginx'
+  # #   environment:
+  # #     LOGSPOUT: ignore
+  # #   volumes:
+  # #     - '/var/run/docker.sock:/tmp/docker.sock'
+  # #   depends_on:
+  # #     - logstash
 
-  # # Cribl
-  # criblmaster:
-  #   container_name: criblmaster
-  #   image: cribl/cribl:latest
-  #   environment:
-  #     - LOGSPOUT=ignore
-  #     - CRIBL_DIST_MODE=master
-  #     - CRIBL_DIST_MASTER_URL=tcp://criblmaster@0.0.0.0:4200
-  #     - CRIBL_VOLUME_DIR=/opt/cribl/config-volume
-  #     - CRIBL_BEFORE_START_CMD_1=/tmp/fix-git-dir.sh
-  #   ports:
-  #     - 9000:9000
-  #   volumes:
-  #     - ./cribl-config-master:/opt/cribl/config-volume
-  #     - ./cribl-scripts/fix-git-dir.sh:/tmp/fix-git-dir.sh
-  # criblworker:
-  #   container_name: criblworker
-  #   image: cribl/cribl:latest
-  #   depends_on:
-  #     - criblmaster
-  #   environment:
-  #     - LOGSPOUT=ignore
-  #     - CRIBL_DIST_MODE=worker
-  #     - CRIBL_DIST_MASTER_URL=tcp://criblmaster@criblmaster:4200
-  #     - CRIBL_VOLUME_DIR=/opt/cribl/config-volume
-  #     - CRIBL_BEFORE_START_CMD_1=/tmp/fix-git-dir.sh
-  #   volumes:
-  #     - ./cribl-config-worker:/opt/cribl/config-volume
-  #     - ./cribl-scripts/fix-git-dir.sh:/tmp/fix-git-dir.sh
+  # # # Cribl
+  # # criblmaster:
+  # #   container_name: criblmaster
+  # #   image: cribl/cribl:latest
+  # #   environment:
+  # #     - LOGSPOUT=ignore
+  # #     - CRIBL_DIST_MODE=master
+  # #     - CRIBL_DIST_MASTER_URL=tcp://criblmaster@0.0.0.0:4200
+  # #     - CRIBL_VOLUME_DIR=/opt/cribl/config-volume
+  # #     - CRIBL_BEFORE_START_CMD_1=/tmp/fix-git-dir.sh
+  # #   ports:
+  # #     - 9000:9000
+  # #   volumes:
+  # #     - ./cribl-config-master:/opt/cribl/config-volume
+  # #     - ./cribl-scripts/fix-git-dir.sh:/tmp/fix-git-dir.sh
+  # # criblworker:
+  # #   container_name: criblworker
+  # #   image: cribl/cribl:latest
+  # #   depends_on:
+  # #     - criblmaster
+  # #   environment:
+  # #     - LOGSPOUT=ignore
+  # #     - CRIBL_DIST_MODE=worker
+  # #     - CRIBL_DIST_MASTER_URL=tcp://criblmaster@criblmaster:4200
+  # #     - CRIBL_VOLUME_DIR=/opt/cribl/config-volume
+  # #     - CRIBL_BEFORE_START_CMD_1=/tmp/fix-git-dir.sh
+  # #   volumes:
+  # #     - ./cribl-config-worker:/opt/cribl/config-volume
+  # #     - ./cribl-scripts/fix-git-dir.sh:/tmp/fix-git-dir.sh
 
