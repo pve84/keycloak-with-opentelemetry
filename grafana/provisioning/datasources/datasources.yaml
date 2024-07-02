@@ -7,14 +7,14 @@ datasources:
     access: proxy
     url: http://jaeger:16686
     
-  - name: prometheus
-    uid: prometheus
-    type: prometheus
-    access: proxy
-    url: http://prometheus:9090
-    jsonData:
-      timeInterval: "60s"
-      httpMethod: "POST"
+  # - name: prometheus
+  #   uid: prometheus
+  #   type: prometheus
+  #   access: proxy
+  #   url: http://prometheus:9090
+  #   jsonData:
+  #     timeInterval: "60s"
+  #     httpMethod: "POST"
 
   - name: elasticsearch
     uid: elasticsearch
