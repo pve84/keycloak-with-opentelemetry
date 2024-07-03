@@ -47,8 +47,6 @@ services:
     environment:
       LOGSPOUT: ignore
     depends_on:
-      - jaeger
-      - prometheus
       - elasticsearch
 
   elasticsearch:
