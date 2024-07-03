@@ -1,2 +1,3 @@
-esdata
-kidata
+elasticsearch/data
+kibana/data
+.vscode

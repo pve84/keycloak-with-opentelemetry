@@ -33,7 +33,4 @@ service:
       receivers: [otlp]
       processors: [batch/otlp-traces]
       exporters: [otlphttp/elastic]
-  telemetry:
-    metrics:
-      address: 0.0.0.0:8888
-      level: basic
+

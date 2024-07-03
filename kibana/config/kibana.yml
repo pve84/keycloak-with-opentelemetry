@@ -14,7 +14,8 @@
 # This section was automatically generated during setup.
 server.host: 0.0.0.0
 server.shutdownTimeout: 5s
-elasticsearch.hosts: ['https://172.18.0.4:9200']
+elasticsearch.hosts: ['https://elasticsearch:9200']
+elasticsearch.ssl.verificationMode: none
 monitoring.ui.container.elasticsearch.enabled: true
 elasticsearch.serviceAccountToken: AAEAAWVsYXN0aWMva2liYW5hL2Vucm9sbC1wcm9jZXNzLXRva2VuLTE3MTk5OTc5MzA5Mjk6b0dETTNabTFSVXEwWUJyX1FmYWRYdw
 elasticsearch.ssl.certificateAuthorities: [/usr/share/kibana/data/ca_1719997932129.crt]

@@ -22,7 +22,7 @@ services:
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
       OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: http/protobuf
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://elastic-apm:8200
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel:4318
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_METRICS_ENABLED: "false"
@@ -36,6 +36,18 @@ services:
       # - '--log-console-output=json'
       - '--log=console'
       - '--log-level=INFO'
+
+  otel:
+    container_name: otel
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel/otel-config.yaml:/etc/otel-config.yaml
+    command:
+      '--config=/etc/otel-config.yaml'
+    environment:
+      LOGSPOUT: ignore
+    depends_on:
+      - elasticsearch
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
