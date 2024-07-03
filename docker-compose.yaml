@@ -12,7 +12,7 @@ services:
   keycloak:
     container_name: keycloak
     build:
-      context: .
+      context: keycloak
       dockerfile: Dockerfile-keycloak-with-opentelemetry
     ports:
       - 9464:9464
@@ -29,8 +29,6 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
       KC_PROXY: edge
-    depends_on:
-      - otel
     command:
       - start-dev
       # - '--log-console-output=json'

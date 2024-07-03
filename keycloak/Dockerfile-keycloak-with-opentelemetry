@@ -1,0 +1,6 @@
+FROM quay.io/keycloak/keycloak:24.0.5-0
+
+# see https://github.com/aerogear/keycloak-metrics-spi/releases
+ARG KEYCLOAK_METRICS_SPI_RELEASE=2.5.3
+
+ADD --chown=keycloak:keycloak opentelemetry-javaagent.jar /tmp/opentelemetry-javaagent.jar
