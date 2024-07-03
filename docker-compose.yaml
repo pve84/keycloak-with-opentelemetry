@@ -1,5 +1,4 @@
 services:
-
   nginx:
     container_name: nginx
     image: nginx:latest
@@ -21,8 +20,9 @@ services:
       JAVA_OPTS_APPEND: "-javaagent:/tmp/opentelemetry-javaagent.jar"
       OTEL_SERVICE_NAME: keycloak
       OTEL_TRACES_EXPORTER: otlp
-      # OTEL_METRICS_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel:4317
+      OTEL_METRICS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel:4318
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_METRICS_ENABLED: "false"
@@ -40,12 +40,18 @@ services:
   jaeger:
     container_name: jaeger
     image: jaegertracing/all-in-one:latest
+    command: 
+      - "--log-level=debug"
     ports:
       - 16686:16686 # Jaeger UI
-      - 4317:55680  # GRPC OTLP
+      # - 4317:55680  # GRPC OTLP
+      - 4317:4317
+      - 4318:4318
       - 13133:13133 # Healthcheck
     environment:
       LOGSPOUT: ignore
+
+
 
   grafana:
     container_name: grafana
@@ -54,7 +60,7 @@ services:
       - ./grafana/dashboards:/provisioning/dashboards
       - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - 3001:3000
+      - 3000:3000
     environment:
       LOGSPOUT: ignore
       GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -62,7 +68,7 @@ services:
       GF_USERS_HOME_PAGE: /d/Xbo7ftQnz/keycloak?orgId=1
     depends_on:
       - jaeger
-      # - prometheus
+      - prometheus
 
   prometheus:
     container_name: prometheus
@@ -89,22 +95,39 @@ services:
       LOGSPOUT: ignore
     depends_on:
       - jaeger
-      # - prometheus
+      - prometheus
       - elasticsearch
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.3.3
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
     container_name: elasticsearch
+    ports:
+      - 9200:9200
     environment:
       - LOGSPOUT=ignore
-      - xpack.security.enabled=false
+      # - xpack.security.enabled=false
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_USERNAME=elastic
+      - ELASTIC_PASSWORD=elastic
     cap_add:
       - IPC_LOCK
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data
+      - ./esconfig:/usr/share/elasticsearch/config
+
+  elastic-apm:
+    image: docker.elastic.co/apm/apm-server:8.14.1
+    container_name: elastic-apm
+    ports:
+      - 8200:8200
+    volumes:
+      - "${PWD}/apm-server.docker.yml:/usr/share/apm-server/apm-server.yml"
+    depends_on:
+      - elasticsearch
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.3.3
+    image: docker.elastic.co/kibana/kibana:8.14.1
     container_name: kibana
     ports:
       - 5601:5601
@@ -116,18 +139,21 @@ services:
       XPACK_SECURITY_ENCRYPTIONKEY: a017e442013e766c008879dfcf48a78f
     depends_on:
       - elasticsearch
-      
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.3.3
-    container_name: logstash
     volumes:
-      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-    environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-      LOGSPOUT: ignore
-    depends_on:
-      - elasticsearch
+      - ./kidata:/usr/share/kibana/data
+      - ./kiconfig:/usr/share/kibana/config
+      
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:8.3.3
+  #   container_name: logstash
+  #   volumes:
+  #     - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+  #     - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+  #   environment:
+  #     LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+  #     LOGSPOUT: ignore
+  #   depends_on:
+  #     - elasticsearch
       
   # # logspout:
   # #   image: gliderlabs/logspout:v3
@@ -169,4 +195,8 @@ services:
   # #   volumes:
   # #     - ./cribl-config-worker:/opt/cribl/config-volume
   # #     - ./cribl-scripts/fix-git-dir.sh:/tmp/fix-git-dir.sh
-
+volumes:
+  esdata:
+  esconfig:
+  kiconfig:
+  kidata:

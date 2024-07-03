@@ -11,24 +11,6 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
-  Prometheus scrapers
-  prometheus:
-    config:
-      scrape_configs:
-      - job_name: otel-colllector-metrics
-        scrape_interval: 10s
-        static_configs:
-        - targets: ['0.0.0.0:8888']
-      - job_name: keycloak-builtin-metrics
-        scrape_interval: 10s
-        metrics_path: /metrics 
-        static_configs:
-        - targets: ['keycloak:8080']
-      - job_name: keycloak-aerogear-metrics
-        scrape_interval: 10s
-        metrics_path: /realms/master/metrics 
-        static_configs:
-        - targets: ['nginx:8080']
 
 processors:
   batch/otlp-traces:
@@ -37,31 +19,20 @@ processors:
     send_batch_max_size: 0
 
 exporters:
-  # prometheus
-  prometheusremotewrite/metrics:
-    endpoint: http://prometheus:9090/api/v1/write
-    tls:
-      insecure: true
-  # jaeger
-  jaeger/traces:
-    endpoint: jaeger:14250
-    tls:
-      insecure: true
-  # logging
+
+  otlphttp/elastic:
+    endpoint: "http://elastic-apm:8200"
+
   logging:
     verbosity: detailed
 
 service:
   extensions: [health_check]
   pipelines:
-    metrics:
-      receivers: [prometheus, otlp]
-      processors: []
-      exporters: [prometheusremotewrite/metrics]
     traces:
       receivers: [otlp]
       processors: [batch/otlp-traces]
-      exporters: [jaeger/traces]
+      exporters: [otlphttp/elastic]
   telemetry:
     metrics:
       address: 0.0.0.0:8888

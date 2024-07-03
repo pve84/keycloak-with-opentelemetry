@@ -1,8 +1,0 @@
-default:
-  description: Default Worker Group
-  tags: default
-  configVersion: 10f161d
-default_fleet:
-  description: Default Fleet
-  tags: default
-  isFleet: true

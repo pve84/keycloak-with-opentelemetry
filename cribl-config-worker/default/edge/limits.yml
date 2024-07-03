@@ -1,5 +1,0 @@
-eventsMetadataSources:
-  - os
-  - cribl
-  - aws
-  - env
