@@ -21,22 +21,38 @@ services:
       OTEL_SERVICE_NAME: keycloak
       OTEL_TRACES_EXPORTER: otlp
       OTEL_METRICS_EXPORTER: none
-      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: http/protobuf
+      OTEL_LOGS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_TRACES_PROTOCOL: grpc
       OTEL_EXPORTER_OTLP_ENDPOINT: http://elastic-apm:8200
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=Acceptatie
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_METRICS_ENABLED: "false"
       KC_HEALTH_ENABLED: "true"
       KC_HTTP_ENABLED: "true"
       KC_PROXY: edge
+    depends_on:
+      - otel
     command:
       - start-dev
       # - '--log-console-output=json'
       - '--log=console'
       - '--log-level=INFO'
 
+  otel:
+    container_name: otel
+    image: otel/opentelemetry-collector-contrib:latest
+    volumes:
+      - ./otel/otel-config.yaml:/etc/otel-config.yaml
+    command:
+      '--config=/etc/otel-config.yaml'
+    environment:
+      LOGSPOUT: ignore
+    depends_on:
+      - elasticsearch
+
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
     container_name: elasticsearch
     ports:
       - 9200:9200
@@ -54,7 +70,7 @@ services:
       - ./elasticsearch/config:/usr/share/elasticsearch/config
 
   elastic-apm:
-    image: docker.elastic.co/apm/apm-server:8.14.1
+    image: docker.elastic.co/apm/apm-server:7.17.1
     container_name: elastic-apm
     ports:
       - 8200:8200
@@ -64,7 +80,7 @@ services:
       - elasticsearch
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.14.1
+    image: docker.elastic.co/kibana/kibana:7.17.1
     container_name: kibana
     ports:
       - 5601:5601
